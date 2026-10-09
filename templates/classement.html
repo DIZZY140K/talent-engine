@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talent Engine – Classement</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" referrerpolicy="no-referrer" />
+    <link href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="A navbar navbar-expand-lg" data-bs-theme="dark">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="{{ url_for('postuler') }}">Talent engine</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Ouvrir le menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto gap-lg-3">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('postuler') }}">Postuler</a></li>
+        <li class="nav-item"><a class="nav-link active" href="{{ url_for('classement') }}">Classement</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-5">
+  <h1 class="fw-bold mb-4">Classement des candidats</h1>
+
+  <!-- Cartes de synthèse (remplies par le script en bas) -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card card-body"><span class="text-secondary">À examiner en priorité</span><span class="display-6 fw-bold" id="n-priorite">0</span></div></div>
+    <div class="col-md-4"><div class="card card-body"><span class="text-secondary">À étudier</span><span class="display-6 fw-bold" id="n-etudier">0</span></div></div>
+    <div class="col-md-4"><div class="card card-body"><span class="text-secondary">Faible adéquation</span><span class="display-6 fw-bold" id="n-faible">0</span></div></div>
+  </div>
+
+  <!-- Recherche et filtre -->
+  <div class="row g-2 mb-3">
+    <div class="col-md-8">
+      <label for="recherche" class="visually-hidden">Rechercher</label>
+      <input type="search" class="form-control" id="recherche" placeholder="Rechercher un nom ou un email">
+    </div>
+    <div class="col-md-4">
+      <label for="filtre" class="visually-hidden">Catégorie</label>
+      <select class="form-select" id="filtre">
+        <option value="">Toutes les catégories</option>
+        <option>À examiner en priorité</option>
+        <option>À étudier</option>
+        <option>Faible adéquation</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tableau : lignes générées par Flask (boucle Jinja) -->
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr><th>#</th><th>Candidat</th><th>Score /100</th><th>Catégorie</th><th><span class="visually-hidden">Actions</span></th></tr>
+        </thead>
+        <tbody id="corps">
+          {% for c in candidats %}
+          <tr data-nom="{{ c.nom }}" data-email="{{ c.email }}" data-categorie="{{ c.categorie }}" data-score="{{ c.score }}" data-comp="{{ c.s_competences }}" data-exp="{{ c.s_experience }}" data-mot="{{ c.s_motivation }}" data-dispo="{{ c.s_disponibilite }}" data-lien="{{ c.s_lien }}">
+            <td class="fw-bold">{{ loop.index }}</td>
+            <td><div class="fw-semibold">{{ c.nom }}</div><div class="small text-secondary">{{ c.email }}</div></td>
+            <td style="min-width:160px">
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:8px" role="progressbar" aria-valuenow="{{ c.score }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-{{ couleur(c.categorie) }}" style="width:{{ c.score }}%"></div></div>
+                <strong>{{ c.score }}</strong>
+              </div>
+            </td>
+            <td><span class="badge text-bg-{{ couleur(c.categorie) }}">{{ c.categorie }}</span></td>
+            <td class="text-end"><button type="button" class="btn btn-outline-dark btn-sm btn-detail">Voir le détail</button></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-center text-secondary py-4">Aucune candidature pour le moment.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-secondary small mt-2 d-none" id="vide">Aucun candidat ne correspond à votre recherche.</p>
+  <p class="text-secondary small mt-3">Le score sert à trier les candidatures : un membre de l'équipe examine chaque profil.</p>
+</main>
+
+<!-- Fenêtre de détail -->
+<div class="modal fade" id="detail" tabindex="-1" aria-labelledby="detail-titre" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="detail-titre"></h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary" id="detail-email"></p>
+        <div id="detail-lignes"></div>
+        <hr>
+        <p class="fw-bold mb-0">Total : <span id="detail-total"></span> / 100</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+<script>
+  const lignes = [...document.querySelectorAll('#corps tr[data-nom]')];
+  const recherche = document.getElementById('recherche');
+  const filtre = document.getElementById('filtre');
+
+  // Compteurs
+  const compter = cat => lignes.filter(l => l.dataset.categorie === cat).length;
+  document.getElementById('n-priorite').textContent = compter('À examiner en priorité');
+  document.getElementById('n-etudier').textContent = compter('À étudier');
+  document.getElementById('n-faible').textContent = compter('Faible adéquation');
+
+  // Recherche + filtre
+  function appliquer() {
+    const q = recherche.value.trim().toLowerCase();
+    let visibles = 0;
+    lignes.forEach(l => {
+      const texte = (l.dataset.nom + ' ' + l.dataset.email).toLowerCase();
+      const ok = texte.includes(q) && (!filtre.value || l.dataset.categorie === filtre.value);
+      l.classList.toggle('d-none', !ok);
+      if (ok) visibles++;
+    });
+    document.getElementById('vide').classList.toggle('d-none', visibles > 0);
+  }
+  recherche.addEventListener('input', appliquer);
+  filtre.addEventListener('change', appliquer);
+
+  // Détail d'un candidat
+  const criteres = [['Compétences', 'comp', 40], ['Expérience', 'exp', 25], ['Motivation', 'mot', 20], ['Disponibilité', 'dispo', 10], ['Lien GitHub / portfolio', 'lien', 5]];
+  const modal = new bootstrap.Modal(document.getElementById('detail'));
+  document.querySelectorAll('.btn-detail').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = btn.closest('tr').dataset;
+      document.getElementById('detail-titre').textContent = d.nom;
+      document.getElementById('detail-email').textContent = d.email + ' · ' + d.categorie;
+      document.getElementById('detail-total').textContent = d.score;
+      document.getElementById('detail-lignes').innerHTML = criteres.map(([nom, cle, max]) => `
+        <div class="mb-2">
+          <div class="d-flex justify-content-between small"><span>${nom}</span><span>${d[cle]} / ${max}</span></div>
+          <div class="progress" style="height:6px"><div class="progress-bar" style="width:${d[cle] / max * 100}%"></div></div>
+        </div>`).join('');
+      modal.show();
+    });
+  });
+</script>
+</body>
+</html>

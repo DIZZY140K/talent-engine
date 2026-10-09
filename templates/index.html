@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talent Engine – Postuler</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" referrerpolicy="no-referrer" />
+    <link href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="A navbar navbar-expand-lg" data-bs-theme="dark">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="{{ url_for('postuler') }}">Talent engine</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Ouvrir le menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto gap-lg-3">
+        <li class="nav-item"><a class="nav-link active" href="{{ url_for('postuler') }}">Postuler</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('classement') }}">Classement</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-5">
+  <div class="row g-5 align-items-start">
+
+    <section class="col-lg-5">
+      <h1 class="display-5 fw-bold mb-3">Rejoignez les programmes SKULLVI</h1>
+      <p class="lead">Remplissez ce formulaire en 5 minutes. Votre profil est qualifié automatiquement selon des critères transparents.</p>
+      <ol class="ps-3 text-secondary">
+        <li class="mb-2">Vous envoyez votre candidature</li>
+        <li class="mb-2">Un score sur 100 est calculé</li>
+        <li class="mb-2">L'équipe examine les profils en priorité</li>
+      </ol>
+    </section>
+
+    <section class="col-lg-7">
+      <form class="card card-body p-4 shadow-sm needs-validation" action="/postuler" method="post" novalidate>
+
+        {% if envoye %}
+        <div class="alert alert-success" role="alert">Merci ! Votre candidature a bien été enregistrée.</div>
+        {% elif erreurs %}
+        <div class="alert alert-danger" role="alert">Votre candidature n'a pas été envoyée : corrigez les champs en rouge.</div>
+        {% endif %}
+
+        <div class="mb-3">
+          <label for="nom" class="form-label fw-semibold">Nom complet</label>
+          <input type="text" class="form-control{{ ' is-invalid' if erreurs.nom }}" id="nom" name="nom" placeholder="Votre nom" required value="{{ valeurs.nom }}">
+          <div class="invalid-feedback">{{ erreurs.nom or 'Entrez votre nom.' }}</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label fw-semibold">Email</label>
+          <input type="email" class="form-control{{ ' is-invalid' if erreurs.email }}" id="email" name="email" placeholder="nom@exemple.com" required value="{{ valeurs.email }}">
+          <div class="invalid-feedback">{{ erreurs.email or 'Entrez une adresse email valide.' }}</div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label for="niveau" class="form-label fw-semibold">Niveau d'études</label>
+            <select class="form-select{{ ' is-invalid' if erreurs.niveau }}" id="niveau" name="niveau" required>
+              <option value="" disabled{{ ' selected' if not valeurs.niveau }}>Choisir…</option>
+              <option value="bac"{{ ' selected' if valeurs.niveau == 'bac' }}>Bac</option>
+              <option value="bac+1"{{ ' selected' if valeurs.niveau == 'bac+1' }}>Bac+1</option>
+              <option value="bac+2"{{ ' selected' if valeurs.niveau == 'bac+2' }}>Bac+2</option>
+              <option value="bac+3"{{ ' selected' if valeurs.niveau == 'bac+3' }}>Bac+3</option>
+              <option value="bac+4"{{ ' selected' if valeurs.niveau == 'bac+4' }}>Bac+4</option>
+              <option value="bac+5"{{ ' selected' if valeurs.niveau == 'bac+5' }}>Bac+5 et plus</option>
+            </select>
+            <div class="invalid-feedback">{{ erreurs.niveau or 'Choisissez un niveau.' }}</div>
+          </div>
+          <div class="col-md-6">
+            <label for="experience" class="form-label fw-semibold">Années d'expérience</label>
+            <input type="number" class="form-control{{ ' is-invalid' if erreurs.experience }}" id="experience" name="experience" min="0" max="50" step="1" required value="{{ valeurs.experience }}">
+            <div class="invalid-feedback">{{ erreurs.experience or 'Entrez un nombre entier entre 0 et 50.' }}</div>
+          </div>
+        </div>
+
+        <fieldset class="mb-3">
+          <legend class="form-label fw-semibold fs-6">Compétences</legend>
+          <div class="d-flex flex-wrap gap-2">
+            <div><input type="checkbox" class="btn-check" id="c-html" name="competences" value="html_css" autocomplete="off"{{ ' checked' if 'html_css' in valeurs.competences }}><label class="btn btn-outline-primary" for="c-html">HTML/CSS</label></div>
+            <div><input type="checkbox" class="btn-check" id="c-js" name="competences" value="javascript" autocomplete="off"{{ ' checked' if 'javascript' in valeurs.competences }}><label class="btn btn-outline-primary" for="c-js">JavaScript</label></div>
+            <div><input type="checkbox" class="btn-check" id="c-py" name="competences" value="python" autocomplete="off"{{ ' checked' if 'python' in valeurs.competences }}><label class="btn btn-outline-primary" for="c-py">Python</label></div>
+            <div><input type="checkbox" class="btn-check" id="c-php" name="competences" value="php" autocomplete="off"{{ ' checked' if 'php' in valeurs.competences }}><label class="btn btn-outline-primary" for="c-php">PHP</label></div>
+            <div><input type="checkbox" class="btn-check" id="c-sql" name="competences" value="sql" autocomplete="off"{{ ' checked' if 'sql' in valeurs.competences }}><label class="btn btn-outline-primary" for="c-sql">SQL</label></div>
+            <div><input type="checkbox" class="btn-check" id="c-git" name="competences" value="git" autocomplete="off"{{ ' checked' if 'git' in valeurs.competences }}><label class="btn btn-outline-primary" for="c-git">Git</label></div>
+          </div>
+          {% if erreurs.competences %}<div class="text-danger small mt-1">{{ erreurs.competences }}</div>{% endif %}
+        </fieldset>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label for="disponibilite" class="form-label fw-semibold">Disponible à partir du</label>
+            <input type="date" class="form-control{{ ' is-invalid' if erreurs.disponibilite }}" id="disponibilite" name="disponibilite" required value="{{ valeurs.disponibilite }}">
+            <div class="invalid-feedback">{{ erreurs.disponibilite or 'Choisissez une date.' }}</div>
+          </div>
+          <div class="col-md-6">
+            <label for="lien" class="form-label fw-semibold">GitHub / portfolio</label>
+            <input type="url" class="form-control{{ ' is-invalid' if erreurs.lien }}" id="lien" name="lien" placeholder="https://github.com/…" value="{{ valeurs.lien }}">
+            <div class="invalid-feedback">{{ erreurs.lien or 'Le lien doit commencer par http.' }}</div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="motivation" class="form-label fw-semibold">Motivation</label>
+          <textarea class="form-control{{ ' is-invalid' if erreurs.motivation }}" id="motivation" name="motivation" rows="4" minlength="50" placeholder="Pourquoi voulez-vous rejoindre SKULLVI ?" required>{{ valeurs.motivation }}</textarea>
+          <div class="form-text"><span id="compteur">0</span> caractères (300 recommandés)</div>
+          <div class="invalid-feedback">{{ erreurs.motivation or 'Écrivez au moins 50 caractères.' }}</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg">Envoyer ma candidature</button>
+      </form>
+    </section>
+
+  </div>
+</main>
+
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+<script>
+  const form = document.querySelector('.needs-validation');
+  form.addEventListener('submit', e => {
+    if (!form.checkValidity()) { e.preventDefault(); e.stopPropagation(); }
+    form.classList.add('was-validated');
+  });
+  const m = document.getElementById('motivation');
+  document.getElementById('compteur').textContent = m.value.length;
+  m.addEventListener('input', () => {
+    document.getElementById('compteur').textContent = m.value.length;
+  });
+</script>
+</body>
+</html>

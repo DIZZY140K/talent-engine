@@ -1,0 +1,18 @@
+
+.A {
+    background-color: #5a5ae0;
+}
+
+
+.card {
+    border-radius: 12px;
+}
+.btn-check:checked + .btn-outline-primary {
+    background-color: #5a5ae0;
+    border-color: #5a5ae0;
+    color: #fff;
+}
+.btn-outline-primary {
+    --bs-btn-color: #4343b8;
+    --bs-btn-border-color: #5a5ae0;
+}
